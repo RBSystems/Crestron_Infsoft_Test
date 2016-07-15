@@ -4,8 +4,8 @@ import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
-import android.location.LocationListener;
 import android.net.Uri;
 import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
@@ -16,6 +16,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.infsoft.android.locator.*;
+import com.infsoft.android.maps.MapView;
+import com.infsoft.android.maps.MyLocation;
 
 public class MainActivity extends Activity implements com.infsoft.android.locator.LocationListener {
 
@@ -27,7 +29,9 @@ public class MainActivity extends Activity implements com.infsoft.android.locato
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.activity_main);
+
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1) {
             // Marshmallow
             getAccessFineLocationPermission();
@@ -39,7 +43,15 @@ public class MainActivity extends Activity implements com.infsoft.android.locato
         locationManager = LocationManager.getService(this);
 
         // request location updates
-        locationManager.requestLocationUpdates(this, 100, 1, this);
+        locationManager.requestLocationUpdates(this, 100, (float)0.3, this);
+
+        //configure mapview
+        ((MapView)findViewById(R.id.mapView)).setMinZoomLevel(25);
+        ((MapView)findViewById(R.id.mapView)).setMaxZoomLevel(15);
+        ((MapView)findViewById(R.id.mapView)).setDisplayButton3D(true);
+        ((MapView)findViewById(R.id.mapView)).setDisplayButtonLevelWheel(true);
+        ((MapView)findViewById(R.id.mapView)).setDisplayButtonMyPostion(true);
+
     }
 
     public void onLocationChanged(Location location) {
@@ -54,6 +66,9 @@ public class MainActivity extends Activity implements com.infsoft.android.locato
         Log.d("INDOOR_POSITION", "LATITUDE = " + location.getLatitude());
         Log.d("INDOOR_POSITION", "LONGITUDE = " + location.getLongitude());
         Log.d("INDOOR_POSITION", "LEVEL = " + location.getLevel());
+
+        MyLocation myLocation = new MyLocation(location.getLatitude(), location.getLongitude(), location.getLevel(), 10, true);
+        ((MapView)findViewById(R.id.mapView)).animateToMyLocation(myLocation);
     }
 
     @Override
@@ -99,6 +114,10 @@ public class MainActivity extends Activity implements com.infsoft.android.locato
 
         ((TextView)(findViewById(R.id.lattitudeLabel))).setText(String.valueOf(locationManager.getLastKnownLocation().getLatitude()));
         ((TextView)(findViewById(R.id.longitudeLabel))).setText(String.valueOf(locationManager.getLastKnownLocation().getLongitude()));
+
+        MyLocation myLocation = new MyLocation(locationManager.getLastKnownLocation().getLatitude(),
+                locationManager.getLastKnownLocation().getLongitude(), locationManager.getLastKnownLocation().getLevel(), 10, true);
+        ((MapView)findViewById(R.id.mapView)).animateToMyLocation(myLocation);
     }
 
     public void recordButtonClick(View v){
@@ -128,5 +147,13 @@ public class MainActivity extends Activity implements com.infsoft.android.locato
         startActivity(sendIntent);
         result = "";
         positionNum = 0;
+    }
+
+    public void startServiceClick(View v){
+        startService(new Intent(MainActivity.this, SilentBeaconService.class));
+    }
+
+    public void stopServiceClick(View v){
+        stopService(new Intent(MainActivity.this, SilentBeaconService.class));
     }
 }
