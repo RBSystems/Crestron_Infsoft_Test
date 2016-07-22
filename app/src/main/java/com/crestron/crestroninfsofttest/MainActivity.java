@@ -208,6 +208,8 @@ public class MainActivity extends Activity implements com.infsoft.android.locato
         result = result.substring(0, lastComma);
         lastComma = result.lastIndexOf(",");
         result = result.substring(0, lastComma+1);
+
+        Toast.makeText(this, "Position " + Integer.toString(positionNum--) + " deleted", Toast.LENGTH_SHORT).show();
     }
 
     public void startServiceClick(View v){
@@ -218,7 +220,7 @@ public class MainActivity extends Activity implements com.infsoft.android.locato
         regionBootstrap = new RegionBootstrap(this,region);
 
         ((TextView)(findViewById(R.id.backgroundStatus))).setText("ON");
-        ((TextView)(findViewById(R.id.backgroundStatus))).setTextColor(0x00f708);
+        ((TextView)(findViewById(R.id.backgroundStatus))).setTextColor(0xFF00F708);
     }
 
     public void stopServiceClick(View v){
