@@ -8,6 +8,9 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.RemoteException;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -19,15 +22,36 @@ import com.infsoft.android.locator.*;
 import com.infsoft.android.maps.MapView;
 import com.infsoft.android.maps.MyLocation;
 
-public class MainActivity extends Activity implements com.infsoft.android.locator.LocationListener {
+import org.altbeacon.beacon.Beacon;
+import org.altbeacon.beacon.BeaconConsumer;
+import org.altbeacon.beacon.BeaconManager;
+import org.altbeacon.beacon.BeaconParser;
+import org.altbeacon.beacon.Identifier;
+import org.altbeacon.beacon.MonitorNotifier;
+import org.altbeacon.beacon.RangeNotifier;
+import org.altbeacon.beacon.Region;
+import org.altbeacon.beacon.startup.BootstrapNotifier;
+import org.altbeacon.beacon.startup.RegionBootstrap;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Iterator;
+
+public class MainActivity extends Activity implements com.infsoft.android.locator.LocationListener, BootstrapNotifier {
 
     final private int REQUEST_CODE_ASK_PERMISSIONS = 1;
     private LocationManager locationManager;
     private String result = "";
+    private String backgroundLocationData = "";
     private int positionNum = 0;
+    private RegionBootstrap regionBootstrap;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        Toast.makeText(this, "New instance started", Toast.LENGTH_LONG).show();
+
         super.onCreate(savedInstanceState);
         setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.activity_main);
@@ -43,7 +67,7 @@ public class MainActivity extends Activity implements com.infsoft.android.locato
         locationManager = LocationManager.getService(this);
 
         // request location updates
-        locationManager.requestLocationUpdates(this, 100, (float)0.3, this);
+        locationManager.requestLocationUpdates(this, 100, (float)0.01, this);
 
         //configure mapview
         ((MapView)findViewById(R.id.mapView)).setMinZoomLevel(25);
@@ -52,6 +76,14 @@ public class MainActivity extends Activity implements com.infsoft.android.locato
         ((MapView)findViewById(R.id.mapView)).setDisplayButtonLevelWheel(true);
         ((MapView)findViewById(R.id.mapView)).setDisplayButtonMyPostion(true);
 
+        BeaconManager beaconManager = BeaconManager.getInstanceForApplication(this);
+        //TODO Change back to true after testing
+        beaconManager.setBackgroundMode(false);
+        beaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24"));
+
+        Identifier identifier = Identifier.parse("F7826DA6-4FA2-4E98-8024-BC5B71E0893E"); //kontakt
+        Region region = new Region("com.crestron.crestroninfsoft.MainActivity", null, null, null);
+        regionBootstrap = new RegionBootstrap(this,region);
     }
 
     public void onLocationChanged(Location location) {
@@ -65,9 +97,19 @@ public class MainActivity extends Activity implements com.infsoft.android.locato
 
         Log.d("INDOOR_POSITION", "LATITUDE = " + location.getLatitude());
         Log.d("INDOOR_POSITION", "LONGITUDE = " + location.getLongitude());
-        Log.d("INDOOR_POSITION", "LEVEL = " + location.getLevel());
+        //Log.d("INDOOR_POSITION", "LEVEL = " + location.getLevel());
 
-        MyLocation myLocation = new MyLocation(location.getLatitude(), location.getLongitude(), location.getLevel(), 10, true);
+        DateFormat df = new SimpleDateFormat("MM/dd/yyyy, HH:mm:ss.SSS");
+        String date = df.format(Calendar.getInstance().getTime());
+        backgroundLocationData += date;
+        backgroundLocationData += ",";
+        backgroundLocationData += location.getLatitude();
+        backgroundLocationData += ",";
+        backgroundLocationData += location.getLongitude();
+        backgroundLocationData += ",";
+
+
+        MyLocation myLocation = new MyLocation(location.getLatitude(), location.getLongitude(), location.getLevel(), location.getAccuracyInMeters(), true);
         ((MapView)findViewById(R.id.mapView)).animateToMyLocation(myLocation);
     }
 
@@ -116,7 +158,8 @@ public class MainActivity extends Activity implements com.infsoft.android.locato
         ((TextView)(findViewById(R.id.longitudeLabel))).setText(String.valueOf(locationManager.getLastKnownLocation().getLongitude()));
 
         MyLocation myLocation = new MyLocation(locationManager.getLastKnownLocation().getLatitude(),
-                locationManager.getLastKnownLocation().getLongitude(), locationManager.getLastKnownLocation().getLevel(), 10, true);
+                locationManager.getLastKnownLocation().getLongitude(), locationManager.getLastKnownLocation().getLevel(),
+                locationManager.getLastKnownLocation().getAccuracyInMeters(), true);
         ((MapView)findViewById(R.id.mapView)).animateToMyLocation(myLocation);
     }
 
@@ -137,23 +180,108 @@ public class MainActivity extends Activity implements com.infsoft.android.locato
         result += ",";
     }
 
-    public void emailButtonClick(View v){
+    public void emailBackgroundDataClick(View v){
         Intent sendIntent = new Intent(Intent.ACTION_SEND);
-        sendIntent.setData(Uri.parse("mailto:vwang1111@gmail.com"));
+        sendIntent.setData(Uri.parse("mailto:vwang@crestron.com"));
         sendIntent.putExtra(Intent.EXTRA_SUBJECT, "Location Data Infsoft");
-        sendIntent.putExtra(Intent.EXTRA_EMAIL, "vwang1111@gmail.com");
-        sendIntent.putExtra(Intent.EXTRA_TEXT, result);
+        sendIntent.putExtra(Intent.EXTRA_EMAIL, "vwang@crestron.com");
+        if(!result.equals(""))
+            sendIntent.putExtra(Intent.EXTRA_TEXT, result);
+        else
+            sendIntent.putExtra(Intent.EXTRA_TEXT, backgroundLocationData);
         sendIntent.setType("message/rfc822");
         startActivity(sendIntent);
-        result = "";
-        positionNum = 0;
+
+        if(!result.equals("")) {
+            result = "";
+            positionNum = 0;
+        }
+        else{
+            backgroundLocationData = "";
+        }
+    }
+
+    public void deleteButtonClick(View v){
+        int lastComma = result.lastIndexOf(",");
+        result = result.substring(0, lastComma);
+        lastComma = result.lastIndexOf(",");
+        result = result.substring(0, lastComma);
+        lastComma = result.lastIndexOf(",");
+        result = result.substring(0, lastComma+1);
     }
 
     public void startServiceClick(View v){
-        startService(new Intent(MainActivity.this, SilentBeaconService.class));
+        Toast.makeText(getApplicationContext(),"Starting up background beacon monitoring",Toast.LENGTH_LONG).show();
+
+        Identifier identifier = Identifier.parse("F7826DA6-4FA2-4E98-8024-BC5B71E0893E"); //kontakt
+        Region region = new Region("com.crestron.crestroninfsoft.MainActivity", null, null, null);
+        regionBootstrap = new RegionBootstrap(this,region);
+
+        ((TextView)(findViewById(R.id.backgroundStatus))).setText("ON");
+        ((TextView)(findViewById(R.id.backgroundStatus))).setTextColor(0x00f708);
     }
 
     public void stopServiceClick(View v){
-        stopService(new Intent(MainActivity.this, SilentBeaconService.class));
+        Toast.makeText(getApplicationContext(),"Shutting down background beacon monitoring",Toast.LENGTH_LONG).show();
+
+        regionBootstrap.disable();
+
+        ((TextView)(findViewById(R.id.backgroundStatus))).setText("OFF");
+        ((TextView)(findViewById(R.id.backgroundStatus))).setTextColor(0xFFF90004);
+    }
+
+    @Override
+    public void didEnterRegion(Region arg0) {
+        Log.d("Beacon Service", "Got a didEnterRegion call");
+
+        Handler handler = new Handler(Looper.getMainLooper());
+        handler.post(new Runnable() {
+
+            @Override
+            public void run() {
+                Toast.makeText(getApplicationContext(),
+                        "Entered Region",
+                        Toast.LENGTH_LONG).show();
+            }
+        });
+
+        // This call to disable will make it so the activity below only gets launched the first time a beacon is seen (until the next time the app is launched)
+        // if you want the Activity to launch every single time beacons come into view, remove this call.
+        //regionBootstrap.disable();
+        Intent intent = new Intent(this, MainActivity.class);
+        // IMPORTANT: in the AndroidManifest.xml definition of this activity, you must set android:launchMode="singleInstance" or you will get two instances
+        // created when a user launches the activity manually and it gets launched from here.
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        this.startActivity(intent);
+    }
+
+    @Override
+    public void didExitRegion(Region arg0) {
+        // Don't care
+        Handler handler = new Handler(Looper.getMainLooper());
+        handler.post(new Runnable() {
+
+            @Override
+            public void run() {
+                Toast.makeText(getApplicationContext(),
+                        "Exited Region",
+                        Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    @Override
+    public void didDetermineStateForRegion(int arg0, Region arg1) {
+        // Don't care
+        Handler handler = new Handler(Looper.getMainLooper());
+        handler.post(new Runnable() {
+
+            @Override
+            public void run() {
+                Toast.makeText(getApplicationContext(),
+                        "Region changed",
+                        Toast.LENGTH_LONG).show();
+            }
+        });
     }
 }

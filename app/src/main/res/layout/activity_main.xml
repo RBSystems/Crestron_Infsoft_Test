@@ -61,22 +61,32 @@
             android:layout_toEndOf="@+id/textView2" />
     </LinearLayout>
 
-    <Button
+    <LinearLayout
+        android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Refresh Coordinates"
-        android:id="@+id/refreshLocButton"
-        android:onClick="refreshButtonClick"
-        android:layout_below="@+id/longitudeLabel"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_alignRight="@+id/recordButton"
-        android:layout_alignEnd="@+id/recordButton" />
+        android:layout_gravity="center_horizontal">
 
-    <Space
-        android:layout_width="match_parent"
-        android:layout_height="10dp"
-        android:layout_gravity="center_horizontal" />
+        <Button
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Refresh Coordinates"
+            android:id="@+id/refreshLocButton"
+            android:onClick="refreshButtonClick"
+            android:layout_weight="1"/>
+
+        <Space
+            android:layout_width="50dp"
+            android:layout_height="match_parent" />
+
+        <Button
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Email Location Data"
+            android:layout_weight="1"
+            android:id="@+id/button3"
+            android:onClick="emailBackgroundDataClick" />
+    </LinearLayout>
 
     <LinearLayout
         android:orientation="horizontal"
@@ -101,11 +111,32 @@
         <Button
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Email New Location"
+            android:text="Delete Last Location"
             android:id="@+id/emailButton"
             android:layout_below="@+id/recordButton"
             android:layout_weight="1"
-            android:onClick="emailButtonClick" />
+            android:onClick="deleteButtonClick" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="Background Location Monitoring: "
+            android:id="@+id/textView3" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="ON"
+            android:id="@+id/backgroundStatus"
+            android:textColor="#00f708" />
     </LinearLayout>
 
     <LinearLayout
