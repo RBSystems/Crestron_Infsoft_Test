@@ -175,7 +175,7 @@ public class MainActivity extends Activity implements com.infsoft.android.locato
                 "Position " + (++positionNum) + " recorded at: " + locationManager.getLastKnownLocation().getLatitude() + ","
                         + locationManager.getLastKnownLocation().getLongitude(), Toast.LENGTH_SHORT).show();
 
-        ((TextView)(findViewById(R.id.backgroundStatus))).setText(String.valueOf(positionNum));
+        ((TextView)(findViewById(R.id.positionCount))).setText(String.valueOf(positionNum));
         result += locationManager.getLastKnownLocation().getLatitude();
         result += ",";
         result += locationManager.getLastKnownLocation().getLongitude();
@@ -197,7 +197,7 @@ public class MainActivity extends Activity implements com.infsoft.android.locato
         if(!result.equals("")) {
             result = "";
             positionNum = 0;
-            ((TextView)(findViewById(R.id.backgroundStatus))).setText(String.valueOf(positionNum));
+            ((TextView)(findViewById(R.id.positionCount))).setText(String.valueOf(positionNum));
         }
         else{
             backgroundLocationData = "";
@@ -213,7 +213,7 @@ public class MainActivity extends Activity implements com.infsoft.android.locato
         result = result.substring(0, lastComma+1);
 
         Toast.makeText(this, "Position " + Integer.toString(positionNum--) + " deleted", Toast.LENGTH_SHORT).show();
-        ((TextView)(findViewById(R.id.backgroundStatus))).setText(String.valueOf(positionNum));
+        ((TextView)(findViewById(R.id.positionCount))).setText(String.valueOf(positionNum));
     }
 
     public void startServiceClick(View v){

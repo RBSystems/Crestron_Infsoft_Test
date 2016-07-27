@@ -8,12 +8,14 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/android-beacon-library-2.8.1" />
             <option value="$PROJECT_DIR$/app" />
           </set>
         </option>
         <option name="myModules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/android-beacon-library-2.8.1" />
             <option value="$PROJECT_DIR$/app" />
           </set>
         </option>
