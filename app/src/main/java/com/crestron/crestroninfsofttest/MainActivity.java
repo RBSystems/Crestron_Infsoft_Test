@@ -38,6 +38,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.StringTokenizer;
 
 public class MainActivity extends Activity implements com.infsoft.android.locator.LocationListener, BootstrapNotifier {
 
@@ -67,7 +68,7 @@ public class MainActivity extends Activity implements com.infsoft.android.locato
         locationManager = LocationManager.getService(this);
 
         // request location updates
-        locationManager.requestLocationUpdates(this, 100, (float)0.01, this);
+        locationManager.requestLocationUpdates(this, 100, (float)0.2, this);
 
         //configure mapview
         ((MapView)findViewById(R.id.mapView)).setMinZoomLevel(25);
@@ -174,6 +175,7 @@ public class MainActivity extends Activity implements com.infsoft.android.locato
                 "Position " + (++positionNum) + " recorded at: " + locationManager.getLastKnownLocation().getLatitude() + ","
                         + locationManager.getLastKnownLocation().getLongitude(), Toast.LENGTH_SHORT).show();
 
+        ((TextView)(findViewById(R.id.backgroundStatus))).setText(String.valueOf(positionNum));
         result += locationManager.getLastKnownLocation().getLatitude();
         result += ",";
         result += locationManager.getLastKnownLocation().getLongitude();
@@ -195,6 +197,7 @@ public class MainActivity extends Activity implements com.infsoft.android.locato
         if(!result.equals("")) {
             result = "";
             positionNum = 0;
+            ((TextView)(findViewById(R.id.backgroundStatus))).setText(String.valueOf(positionNum));
         }
         else{
             backgroundLocationData = "";
@@ -210,6 +213,7 @@ public class MainActivity extends Activity implements com.infsoft.android.locato
         result = result.substring(0, lastComma+1);
 
         Toast.makeText(this, "Position " + Integer.toString(positionNum--) + " deleted", Toast.LENGTH_SHORT).show();
+        ((TextView)(findViewById(R.id.backgroundStatus))).setText(String.valueOf(positionNum));
     }
 
     public void startServiceClick(View v){
