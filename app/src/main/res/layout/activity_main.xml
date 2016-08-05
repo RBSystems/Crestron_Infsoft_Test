@@ -73,6 +73,7 @@
             android:text="Refresh Coordinates"
             android:id="@+id/refreshLocButton"
             android:onClick="refreshButtonClick"
+            android:hapticFeedbackEnabled="true"
             android:layout_weight="1"/>
 
         <Space
@@ -123,6 +124,7 @@
             android:id="@+id/recordButton"
             android:layout_below="@+id/refreshLocButton"
             android:layout_weight="1"
+            android:hapticFeedbackEnabled="true"
             android:onClick="recordButtonClick" />
 
         <Space
@@ -136,6 +138,7 @@
             android:id="@+id/emailButton"
             android:layout_below="@+id/recordButton"
             android:layout_weight="1"
+            android:hapticFeedbackEnabled="true"
             android:onClick="deleteButtonClick" />
     </LinearLayout>
 
@@ -172,6 +175,7 @@
             android:text="Start Background Service"
             android:layout_weight="1"
             android:id="@+id/button"
+            android:hapticFeedbackEnabled="true"
             android:onClick="startServiceClick" />
 
         <Space
@@ -184,6 +188,7 @@
             android:text="Stop Background Service"
             android:layout_weight="1"
             android:id="@+id/button2"
+            android:hapticFeedbackEnabled="true"
             android:onClick="stopServiceClick" />
     </LinearLayout>
 

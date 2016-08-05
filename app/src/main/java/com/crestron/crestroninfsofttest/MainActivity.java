@@ -14,6 +14,7 @@ import android.os.RemoteException;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.HapticFeedbackConstants;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -51,8 +52,6 @@ public class MainActivity extends Activity implements com.infsoft.android.locato
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        Toast.makeText(this, "New instance started", Toast.LENGTH_LONG).show();
-
         super.onCreate(savedInstanceState);
         setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.activity_main);
@@ -93,13 +92,16 @@ public class MainActivity extends Activity implements com.infsoft.android.locato
             return;
         }
 
+        //updates text labels to be current location
         ((TextView)(findViewById(R.id.lattitudeLabel))).setText(String.valueOf(location.getLatitude()));
         ((TextView)(findViewById(R.id.longitudeLabel))).setText(String.valueOf(location.getLongitude()));
 
+        //logs current location for debugging
         Log.d("INDOOR_POSITION", "LATITUDE = " + location.getLatitude());
         Log.d("INDOOR_POSITION", "LONGITUDE = " + location.getLongitude());
         //Log.d("INDOOR_POSITION", "LEVEL = " + location.getLevel());
 
+        //saves the date and location data for further analysis later
         DateFormat df = new SimpleDateFormat("MM/dd/yyyy, HH:mm:ss.SSS");
         String date = df.format(Calendar.getInstance().getTime());
         backgroundLocationData += date;
@@ -109,7 +111,7 @@ public class MainActivity extends Activity implements com.infsoft.android.locato
         backgroundLocationData += location.getLongitude();
         backgroundLocationData += ",";
 
-
+        //update the location on the map
         MyLocation myLocation = new MyLocation(location.getLatitude(), location.getLongitude(), location.getLevel(), location.getAccuracyInMeters(), true);
         ((MapView)findViewById(R.id.mapView)).animateToMyLocation(myLocation);
     }
@@ -148,7 +150,9 @@ public class MainActivity extends Activity implements com.infsoft.android.locato
         }
     }
 
+    //update the location on the map and the coordinates text label when the user manually refreshes
     public void refreshButtonClick(View v) {
+        v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY, HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
 
         if (locationManager.getLastKnownLocation() == null || !locationManager.getLastKnownLocation().isValid()){
             Toast.makeText(this, "No location found", Toast.LENGTH_SHORT).show();
@@ -164,7 +168,10 @@ public class MainActivity extends Activity implements com.infsoft.android.locato
         ((MapView)findViewById(R.id.mapView)).animateToMyLocation(myLocation);
     }
 
+    //records the current lattitude and longitude for further analysis
     public void recordButtonClick(View v){
+        v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY, HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
+
         if (locationManager.getLastKnownLocation() == null || !locationManager.getLastKnownLocation().isValid()){
             Toast.makeText(this, "No location found", Toast.LENGTH_SHORT).show();
             return;
@@ -182,7 +189,11 @@ public class MainActivity extends Activity implements com.infsoft.android.locato
         result += ",";
     }
 
+    //emails either the discreet location data that the user has decided to record in the foreground
+    //or email the background data that was collected if there are no locations in memory to store
     public void emailBackgroundDataClick(View v){
+
+        //uses the default email client with the message body as the location data in csv format
         Intent sendIntent = new Intent(Intent.ACTION_SEND);
         sendIntent.setData(Uri.parse("mailto:vwang@crestron.com"));
         sendIntent.putExtra(Intent.EXTRA_SUBJECT, "Location Data Infsoft");
@@ -194,6 +205,7 @@ public class MainActivity extends Activity implements com.infsoft.android.locato
         sendIntent.setType("message/rfc822");
         startActivity(sendIntent);
 
+        //clear out whichever string you used to reset the recording
         if(!result.equals("")) {
             result = "";
             positionNum = 0;
@@ -204,7 +216,10 @@ public class MainActivity extends Activity implements com.infsoft.android.locato
         }
     }
 
+    //deletes the most recently recorded point of location data
     public void deleteButtonClick(View v){
+        v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY, HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
+
         int lastComma = result.lastIndexOf(",");
         result = result.substring(0, lastComma);
         lastComma = result.lastIndexOf(",");
@@ -216,7 +231,10 @@ public class MainActivity extends Activity implements com.infsoft.android.locato
         ((TextView)(findViewById(R.id.positionCount))).setText(String.valueOf(positionNum));
     }
 
+    //start the background location service that records all positions in the background
     public void startServiceClick(View v){
+        v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY, HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
+
         Toast.makeText(getApplicationContext(),"Starting up background beacon monitoring",Toast.LENGTH_LONG).show();
 
         Identifier identifier = Identifier.parse("F7826DA6-4FA2-4E98-8024-BC5B71E0893E"); //kontakt
@@ -227,7 +245,10 @@ public class MainActivity extends Activity implements com.infsoft.android.locato
         ((TextView)(findViewById(R.id.backgroundStatus))).setTextColor(0xFF00F708);
     }
 
+    //stops the background location service that records all positions in the background
     public void stopServiceClick(View v){
+        v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY, HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
+
         Toast.makeText(getApplicationContext(),"Shutting down background beacon monitoring",Toast.LENGTH_LONG).show();
 
         regionBootstrap.disable();
@@ -236,6 +257,7 @@ public class MainActivity extends Activity implements com.infsoft.android.locato
         ((TextView)(findViewById(R.id.backgroundStatus))).setTextColor(0xFFF90004);
     }
 
+    //called when the app sees a kontakt.io beacon
     @Override
     public void didEnterRegion(Region arg0) {
         Log.d("Beacon Service", "Got a didEnterRegion call");
@@ -261,6 +283,7 @@ public class MainActivity extends Activity implements com.infsoft.android.locato
         this.startActivity(intent);
     }
 
+    //called when the app stops seeing kontakt.io beacons
     @Override
     public void didExitRegion(Region arg0) {
         // Don't care
@@ -276,6 +299,7 @@ public class MainActivity extends Activity implements com.infsoft.android.locato
         });
     }
 
+    //called when the app sees a change in the beacon region
     @Override
     public void didDetermineStateForRegion(int arg0, Region arg1) {
         // Don't care
